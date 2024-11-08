@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: smart-desk-organizer
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
