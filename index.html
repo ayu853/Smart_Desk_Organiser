@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study & Design Item Tracker</title>
+  <style>
+    /* Same styling as before */
+     /* Body and background setup with black shadow */
+     body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background-image: url('360_F_554468927_iwU3VYIjsaeopAb0WPYxVf21TloEhTEj.jpg'); /* Relative file path */
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px 10px rgba(0, 0, 0, 0.5); /* Black shadow for the whole page */
+      transition: background-color 0.3s ease;
+    }
+
+    /* Container styles with black shadow */
+    .container {
+      background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7); /* Black shadow for container */
+      width: 80%;
+      max-width: 900px;
+      transition: background-color 0.3s ease;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7); /* Shadow for text */
+      transition: transform 0.3s ease;
+    }
+
+    /* Table styles with shadow for rows */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Shadow for table */
+      transition: box-shadow 0.3s ease;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Hover effect for table rows */
+    tr:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      transform: scale(1.02);
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    /* Button styles with shadow and hover animations */
+    td button {
+      padding: 8px 12px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Button shadow */
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    td button:hover {
+      background-color: #0056b3;
+      transform: scale(1.1); /* Slightly enlarges the button */
+    }
+
+    /* Form styling */
+    #new-item-form {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    #new-item-form input {
+      padding: 12px;
+      width: 80%;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 1em;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Input shadow */
+      transition: box-shadow 0.3s ease;
+    }
+
+    #new-item-form input:focus {
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    }
+
+    #new-item-form button {
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Shadow for the add button */
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    #new-item-form button:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
+
+    /* QR code container */
+    #qr-code-container {
+      text-align: center;
+      margin-top: 30px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Shadow for QR code container */
+      transition: box-shadow 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Study & Design Item Tracker</h1>
+
+    <div id="new-item-form">
+      <input type="text" id="new-item" placeholder="Enter item name (e.g., Pens)">
+      <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="items-list">
+        <!-- Items will be dynamically inserted here -->
+      </tbody>
+    </table>
+
+    <!-- Container for QR Code -->
+    <div id="qr-code-container"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:5000/items";
+
+    async function fetchItems() {
+      const response = await fetch(apiUrl);
+      const items = await response.json();
+      renderTable(items);
+    }
+
+    function renderTable(items) {
+      const itemsList = document.getElementById("items-list");
+      itemsList.innerHTML = "";
+
+      items.forEach((item) => {
+        const row = document.createElement("tr");
+
+        const itemCell = document.createElement("td");
+        itemCell.textContent = item.name;
+        row.appendChild(itemCell);
+
+        const quantityCell = document.createElement("td");
+        quantityCell.textContent = item.quantity;
+        row.appendChild(quantityCell);
+
+        const actionsCell = document.createElement("td");
+
+        const addButton = document.createElement("button");
+        addButton.textContent = "+";
+        addButton.onclick = () => updateQuantity(item.name, 1);
+        actionsCell.appendChild(addButton);
+
+        const subtractButton = document.createElement("button");
+        subtractButton.textContent = "-";
+        subtractButton.onclick = () => updateQuantity(item.name, -1);
+        actionsCell.appendChild(subtractButton);
+
+        row.appendChild(actionsCell);
+        itemsList.appendChild(row);
+      });
+    }
+
+    async function addItem() {
+      const itemName = document.getElementById("new-item").value.trim().toUpperCase();
+      if (itemName) {
+        await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: itemName, quantity: 0 }),
+        });
+        document.getElementById("new-item").value = "";
+        fetchItems();
+      } else {
+        alert("Please enter a valid item name.");
+      }
+    }
+
+    async function updateQuantity(name, delta) {
+      await fetch(`${apiUrl}/${name}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delta }),
+      });
+      fetchItems();
+    }
+
+    function generateQRCode() {
+      const currentUrl = window.location.href;
+      QRCode.toCanvas(document.getElementById("qr-code-container"), currentUrl, function (error) {
+        if (error) console.error(error);
+      });
+    }
+
+    fetchItems();
+    generateQRCode();
+  </script>
+
+</body>
+</html>
